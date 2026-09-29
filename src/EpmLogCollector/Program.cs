@@ -1,6 +1,7 @@
 using Azure.Core;
 using Azure.Identity;
 using EpmLogCollector.Configuration;
+using EpmLogCollector.Clients;
 using EpmLogCollector.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -27,6 +28,19 @@ var host = new HostBuilder()
             return new ClientSecretCredential(options.TenantId, options.ClientId, options.ClientSecret);
         });
         services.AddSingleton<IGraphAuthenticationService, GraphAuthenticationService>();
+
+        services.AddOptions<GraphApiOptions>()
+            .Configure(options =>
+            {
+                options.BaseUrl = context.Configuration[GraphApiOptions.BaseUrlSetting]
+                    ?? GraphApiOptions.DefaultBaseUrl;
+            })
+            .Validate(
+                options => Uri.TryCreate(options.BaseUrl, UriKind.Absolute, out var baseUri)
+                    && baseUri.Scheme == Uri.UriSchemeHttps,
+                "GraphBaseUrl must be an absolute HTTPS URL.");
+
+        services.AddHttpClient<GraphClient>();
     })
     .Build();
 
