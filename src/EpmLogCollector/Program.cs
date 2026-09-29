@@ -1,5 +1,6 @@
 using Azure.Core;
 using Azure.Identity;
+using Azure.Storage.Blobs;
 using EpmLogCollector.Configuration;
 using EpmLogCollector.Clients;
 using EpmLogCollector.Services;
@@ -41,6 +42,37 @@ var host = new HostBuilder()
                 "GraphBaseUrl must be an absolute HTTPS URL.");
 
         services.AddHttpClient<GraphClient>();
+
+        services.AddOptions<BlobCheckpointOptions>()
+            .Configure(options =>
+            {
+                options.ContainerName = context.Configuration[BlobCheckpointOptions.ContainerNameSetting]
+                    ?? BlobCheckpointOptions.DefaultContainerName;
+                options.BlobName = context.Configuration[BlobCheckpointOptions.BlobNameSetting]
+                    ?? BlobCheckpointOptions.DefaultBlobName;
+            })
+            .Validate(options => !string.IsNullOrWhiteSpace(options.ContainerName), "CheckpointContainerName must not be empty.")
+            .Validate(options => !string.IsNullOrWhiteSpace(options.BlobName), "CheckpointBlobName must not be empty.");
+
+        services.AddSingleton(serviceProvider =>
+        {
+            var connectionString = context.Configuration[BlobCheckpointOptions.StorageConnectionSetting];
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw new InvalidOperationException("AzureWebJobsStorage must be configured for checkpoint storage.");
+            }
+
+            return new BlobServiceClient(connectionString);
+        });
+        services.AddSingleton<ICheckpointBlobStore>(serviceProvider =>
+        {
+            var options = serviceProvider.GetRequiredService<IOptions<BlobCheckpointOptions>>().Value;
+            var containerClient = serviceProvider
+                .GetRequiredService<BlobServiceClient>()
+                .GetBlobContainerClient(options.ContainerName);
+            return new BlobCheckpointStore(containerClient, options.BlobName);
+        });
+        services.AddSingleton<ICheckpointService, BlobCheckpointService>();
     })
     .Build();
 

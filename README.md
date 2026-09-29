@@ -1119,11 +1119,11 @@ The application should follow these principles:
 * [x] Implement `/beta/deviceManagement/elevationRequests`
 * [x] Implement pagination
 * [x] Implement retry handling
-* [ ] Create Graph unit tests
+* [x] Create Graph unit tests
 
 ## Phase 3 — Collection State
 
-* [ ] Implement Blob Storage checkpoint service
+* [x] Implement Blob Storage checkpoint service
 * [ ] Implement timestamp filtering
 * [ ] Implement collection overlap
 * [ ] Verify recovery after failed runs
