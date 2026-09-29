@@ -318,6 +318,8 @@ The application also requires permission to send data through the Azure Monitor 
 
 The required Azure RBAC assignment should be created against the smallest practical scope, preferably the Data Collection Rule rather than the entire subscription or resource group.
 
+The RBAC module assigns the built-in `Monitoring Metrics Publisher` role to the runtime service principal at the DCR scope for Logs Ingestion API access.
+
 ---
 
 # Log Analytics Ingestion
@@ -1150,7 +1152,7 @@ The application should follow these principles:
 * [x] Application Insights integration
 * [x] Log Analytics table Bicep module
 * [x] Data Collection Rule Bicep module
-* [ ] RBAC Bicep module
+* [x] RBAC Bicep module
 * [ ] Root deployment template
 * [ ] Parameter file
 
