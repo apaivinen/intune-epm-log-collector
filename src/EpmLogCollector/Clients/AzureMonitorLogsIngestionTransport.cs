@@ -1,5 +1,4 @@
 using Azure.Monitor.Ingestion;
-using EpmLogCollector.Models.LogAnalytics;
 
 namespace EpmLogCollector.Clients;
 
@@ -9,7 +8,7 @@ public sealed class AzureMonitorLogsIngestionTransport(
     public async Task UploadAsync(
         string dataCollectionRuleImmutableId,
         string streamName,
-        IEnumerable<EpmElevationRequestLog> logs,
+        IEnumerable<BinaryData> logs,
         CancellationToken cancellationToken = default)
     {
         await client.UploadAsync(

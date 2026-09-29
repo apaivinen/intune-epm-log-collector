@@ -508,6 +508,7 @@ GraphClientSecret
 LogsIngestionEndpoint
 DataCollectionRuleImmutableId
 DataCollectionStreamName
+LogsIngestionMaxBatchSizeBytes
 CheckpointContainerName
 CheckpointBlobName
 CollectionOverlap
@@ -518,6 +519,7 @@ Example values:
 ```text
 GraphBaseUrl=https://graph.microsoft.com/beta
 DataCollectionStreamName=Custom-EpmElevationRequests
+LogsIngestionMaxBatchSizeBytes=900000
 CheckpointContainerName=checkpoints
 CheckpointBlobName=epm-elevation-requests.json
 CollectionOverlap=00:05:00
@@ -1136,7 +1138,7 @@ The application should follow these principles:
 * [x] Define DCR stream
 * [x] Implement Log Analytics model
 * [x] Implement Logs Ingestion API client
-* [ ] Implement batching
+* [x] Implement batching
 * [ ] Implement ingestion retries
 
 ## Phase 5 — Infrastructure

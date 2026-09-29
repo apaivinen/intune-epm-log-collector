@@ -103,6 +103,17 @@ var host = new HostBuilder()
                 options.DataCollectionRuleImmutableId =
                     context.Configuration[LogsIngestionOptions.RuleImmutableIdSetting] ?? string.Empty;
                 options.StreamName = context.Configuration[LogsIngestionOptions.StreamNameSetting] ?? string.Empty;
+
+                var configuredMaxBatchSize = context.Configuration[LogsIngestionOptions.MaxBatchSizeBytesSetting];
+                if (!string.IsNullOrWhiteSpace(configuredMaxBatchSize))
+                {
+                    if (!int.TryParse(configuredMaxBatchSize, NumberStyles.None, CultureInfo.InvariantCulture, out var maxBatchSizeBytes))
+                    {
+                        throw new InvalidOperationException("LogsIngestionMaxBatchSizeBytes must be an integer.");
+                    }
+
+                    options.MaxBatchSizeBytes = maxBatchSizeBytes;
+                }
             })
             .Validate(
                 options => Uri.TryCreate(options.Endpoint, UriKind.Absolute, out var endpointUri)
@@ -111,7 +122,10 @@ var host = new HostBuilder()
             .Validate(
                 options => !string.IsNullOrWhiteSpace(options.DataCollectionRuleImmutableId),
                 "DataCollectionRuleImmutableId must be configured.")
-            .Validate(options => !string.IsNullOrWhiteSpace(options.StreamName), "DataCollectionStreamName must be configured.");
+            .Validate(options => !string.IsNullOrWhiteSpace(options.StreamName), "DataCollectionStreamName must be configured.")
+            .Validate(
+                options => options.MaxBatchSizeBytes is > 2 and <= LogsIngestionOptions.MaximumPayloadSizeBytes,
+                $"LogsIngestionMaxBatchSizeBytes must be between 3 and {LogsIngestionOptions.MaximumPayloadSizeBytes}.");
 
         services.AddSingleton(serviceProvider =>
         {
