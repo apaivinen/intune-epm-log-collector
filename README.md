@@ -320,6 +320,18 @@ The required Azure RBAC assignment should be created against the smallest practi
 
 The RBAC module assigns the built-in `Monitoring Metrics Publisher` role to the runtime service principal at the DCR scope for Logs Ingestion API access.
 
+Run the bootstrap script from a PowerShell 7 session after signing in to the target tenant with Azure CLI:
+
+```powershell
+az login --tenant <tenant-id>
+./scripts/Initialize-EntraApplication.ps1 `
+        -TenantId <tenant-id> `
+        -ApplicationId <runtime-application-client-id> `
+        -DataCollectionRuleResourceId <dcr-resource-id>
+```
+
+The DCR argument is optional. The signed-in operator needs Microsoft Graph application/app-role assignment permissions; creating the optional Azure role assignment also requires permission to write role assignments at the DCR scope. The script configures an existing application and never creates or displays credentials.
+
 ---
 
 # Log Analytics Ingestion
@@ -1158,7 +1170,7 @@ The application should follow these principles:
 
 ## Phase 6 — Identity Bootstrap
 
-* [ ] Create `Initialize-EntraApplication.ps1`
+* [x] Create `Initialize-EntraApplication.ps1`
 * [ ] Resolve Microsoft Graph service principal
 * [ ] Assign Graph application role
 * [ ] Validate Graph permission
