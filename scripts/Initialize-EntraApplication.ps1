@@ -227,7 +227,23 @@ if (-not [string]::IsNullOrWhiteSpace($DataCollectionRuleResourceId)) {
             '--scope', $DataCollectionRuleResourceId,
             '--output', 'json'
         ) | Out-Null
-        $dcrRoleStatus = 'Assigned'
+
+        $verifiedDcrAssignments = @(Invoke-AzCliJson -Arguments @(
+            'role', 'assignment', 'list',
+            '--scope', $DataCollectionRuleResourceId,
+            '--all',
+            '--output', 'json'
+        ))
+        $hasDcrRoleAssignment = @($verifiedDcrAssignments | Where-Object {
+            $_.scope -eq $DataCollectionRuleResourceId -and
+            $_.principalId -eq $runtimeServicePrincipal.id -and
+            $_.roleDefinitionId -match "/$dcrSenderRoleId$"
+        }).Count -gt 0
+
+        if (-not $hasDcrRoleAssignment) {
+            throw "Role assignment '$dcrSenderRoleName' was not present at the DCR scope after creation."
+        }
+        $dcrRoleStatus = 'AssignedAndVerified'
     }
     else {
         $dcrRoleStatus = 'WouldAssign'

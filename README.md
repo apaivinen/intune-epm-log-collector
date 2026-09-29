@@ -1174,7 +1174,7 @@ The application should follow these principles:
 * [x] Resolve Microsoft Graph service principal
 * [x] Assign Graph application role
 * [x] Validate Graph permission
-* [ ] Configure Azure RBAC
+* [x] Configure Azure RBAC
 * [ ] Add prerequisite validation
 
 ## Phase 7 — CI/CD
