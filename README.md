@@ -1173,7 +1173,7 @@ The application should follow these principles:
 * [x] Create `Initialize-EntraApplication.ps1`
 * [x] Resolve Microsoft Graph service principal
 * [x] Assign Graph application role
-* [ ] Validate Graph permission
+* [x] Validate Graph permission
 * [ ] Configure Azure RBAC
 * [ ] Add prerequisite validation
 
