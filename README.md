@@ -180,10 +180,13 @@ The Function App is implemented using:
 Language: C#
 Azure Functions runtime: v4
 Execution model: .NET isolated worker
-Target framework: .NET 8
+Target framework: .NET 10 (LTS; support ends November 14, 2028)
 ```
 
 The isolated worker model should be used so that the application does not depend on the legacy Azure Functions in-process runtime.
+
+> [!IMPORTANT]
+> .NET 10 Azure Functions apps are not supported on the Linux Consumption plan. Use Flex Consumption, Premium, or Dedicated when hosting on Linux.
 
 ---
 
@@ -783,7 +786,7 @@ The development container should contain all tools needed for:
 Required tools include:
 
 ```text
-.NET 8 SDK
+.NET 10 SDK
 Azure Functions Core Tools
 Azure CLI
 Bicep CLI
@@ -1104,7 +1107,7 @@ The application should follow these principles:
 * [x] Create repository directory structure
 * [x] Create `.gitignore`
 * [x] Create `.gitattributes`
-* [ ] Create development container
+* [x] Create development container
 * [ ] Create C# Function project
 * [ ] Create test project
 * [ ] Verify local Function execution

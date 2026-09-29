@@ -1,0 +1,27 @@
+{
+  "name": "Intune EPM Log Collector",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/azure-cli:1": {},
+    "ghcr.io/devcontainers/features/powershell:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.csharp",
+        "ms-dotnettools.csdevkit",
+        "ms-azuretools.vscode-azurefunctions",
+        "ms-azuretools.vscode-bicep",
+        "ms-vscode.powershell",
+        "github.vscode-github-actions"
+      ]
+    }
+  },
+  "postCreateCommand": "az bicep install",
+  "forwardPorts": [7071],
+  "remoteUser": "vscode"
+}
