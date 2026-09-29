@@ -1,10 +1,12 @@
 using System.Globalization;
 using Azure.Core;
 using Azure.Identity;
+using Azure.Monitor.OpenTelemetry.Exporter;
 using Azure.Storage.Blobs;
 using EpmLogCollector.Configuration;
 using EpmLogCollector.Clients;
 using EpmLogCollector.Services;
+using Microsoft.Azure.Functions.Worker.OpenTelemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -13,6 +15,10 @@ var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults()
     .ConfigureServices((context, services) =>
     {
+        services.AddOpenTelemetry()
+            .UseFunctionsWorkerDefaults()
+            .UseAzureMonitorExporter();
+
         services.AddOptions<GraphAuthenticationOptions>()
             .Configure(options =>
             {

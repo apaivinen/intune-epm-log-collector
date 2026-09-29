@@ -12,6 +12,9 @@ param appServicePlanName string
 @description('Name of an existing storage account in this resource group used by the Functions host and checkpoint service.')
 param storageAccountName string
 
+@description('Name of the existing workspace-based Application Insights component.')
+param applicationInsightsComponentName string
+
 @secure()
 @description('Function runtime settings, including Graph credentials and Logs Ingestion configuration. Secrets must be supplied securely.')
 param runtimeSettings object
@@ -22,6 +25,10 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' existing = {
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
   name: storageAccountName
+}
+
+resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing = {
+  name: applicationInsightsComponentName
 }
 
 var storageConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
@@ -45,6 +52,10 @@ var platformAppSettings = [
   {
     name: 'WEBSITE_RUN_FROM_PACKAGE'
     value: '1'
+  }
+  {
+    name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+    value: applicationInsights.properties.ConnectionString
   }
 ]
 
