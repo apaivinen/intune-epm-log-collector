@@ -332,6 +332,17 @@ az login --tenant <tenant-id>
 
 The DCR argument is optional. The signed-in operator needs Microsoft Graph application/app-role assignment permissions; creating the optional Azure role assignment also requires permission to write role assignments at the DCR scope. The script configures an existing application and never creates or displays credentials.
 
+Run the read-only prerequisite check before configuring the application:
+
+```powershell
+./scripts/Test-Prerequisites.ps1 `
+        -TenantId <tenant-id> `
+        -ApplicationId <runtime-application-client-id> `
+        -DataCollectionRuleResourceId <dcr-resource-id>
+```
+
+Omit `DataCollectionRuleResourceId` when only validating the Graph setup. The check verifies Azure CLI tenant selection, Graph access and required directory objects, and (when supplied) DCR visibility and the DCR sender role definition. It does not test write permissions because that would require changing Azure resources.
+
 ---
 
 # Log Analytics Ingestion
@@ -1175,7 +1186,7 @@ The application should follow these principles:
 * [x] Assign Graph application role
 * [x] Validate Graph permission
 * [x] Configure Azure RBAC
-* [ ] Add prerequisite validation
+* [x] Add prerequisite validation
 
 ## Phase 7 — CI/CD
 

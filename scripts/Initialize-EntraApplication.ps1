@@ -33,11 +33,11 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-const $graphBaseUrl = 'https://graph.microsoft.com/v1.0'
-const $graphResourceAppId = '00000003-0000-0000-c000-000000000000'
-const $requiredGraphPermission = 'DeviceManagementConfiguration.Read.All'
-const $dcrSenderRoleName = 'Monitoring Metrics Publisher'
-const $dcrSenderRoleId = '3913510d-42f4-4e42-8a64-420c390055eb'
+$graphBaseUrl = 'https://graph.microsoft.com/v1.0'
+$graphResourceAppId = '00000003-0000-0000-c000-000000000000'
+$requiredGraphPermission = 'DeviceManagementConfiguration.Read.All'
+$dcrSenderRoleName = 'Monitoring Metrics Publisher'
+$dcrSenderRoleId = '3913510d-42f4-4e42-8a64-420c390055eb'
 
 function Invoke-AzCliJson {
     param(
