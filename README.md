@@ -355,7 +355,7 @@ EpmElevationRequests_CL
 
 The exact table schema must be defined in Bicep and kept aligned with the C# ingestion model.
 
-Suggested schema:
+Defined schema:
 
 | Column                               | Type     | Description                        |
 | ------------------------------------ | -------- | ---------------------------------- |
@@ -1128,11 +1128,11 @@ The application should follow these principles:
 * [x] Implement Blob Storage checkpoint service
 * [x] Implement timestamp filtering
 * [x] Implement collection overlap
-* [ ] Verify recovery after failed runs
+* [x] Verify recovery after failed runs
 
 ## Phase 4 — Log Analytics
 
-* [ ] Define custom table schema
+* [x] Define custom table schema
 * [ ] Define DCR stream
 * [ ] Implement Log Analytics model
 * [ ] Implement Logs Ingestion API client

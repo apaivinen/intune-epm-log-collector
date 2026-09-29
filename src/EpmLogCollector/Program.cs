@@ -74,6 +74,8 @@ var host = new HostBuilder()
             return new BlobCheckpointStore(containerClient, options.BlobName);
         });
         services.AddSingleton<ICheckpointService, BlobCheckpointService>();
+        services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<CheckpointedCollectionRunner>();
 
         services.AddOptions<CollectionOptions>()
             .Configure(options =>
