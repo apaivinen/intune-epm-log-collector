@@ -1,0 +1,103 @@
+name: Deploy infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: Apply the deployment after validation and what-if
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+env:
+  AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+  AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+
+jobs:
+  infrastructure:
+    name: Validate and deploy Bicep
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: '{"clientId":"${{ vars.AZURE_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}","subscriptionId":"${{ vars.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ vars.AZURE_TENANT_ID }}"}'
+
+      - name: Validate required configuration
+        shell: bash
+        env:
+          AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          EPM_GRAPH_CLIENT_SECRET: ${{ secrets.EPM_GRAPH_CLIENT_SECRET }}
+        run: |
+          set -euo pipefail
+          required=(
+            AZURE_CLIENT_ID
+            AZURE_TENANT_ID
+            AZURE_SUBSCRIPTION_ID
+            AZURE_RESOURCE_GROUP
+            AZURE_LOCATION
+            AZURE_CLIENT_SECRET
+            EPM_GRAPH_CLIENT_SECRET
+          )
+          for variable in "${required[@]}"; do
+            if [[ -z "${!variable}" ]]; then
+              echo "Required GitHub variable or secret is missing: ${variable}" >&2
+              exit 1
+            fi
+          done
+
+      - name: Validate Bicep templates
+        shell: bash
+        run: |
+          set -euo pipefail
+          az bicep build --file infrastructure/main.bicep --stdout >/dev/null
+
+      - name: Compile deployment parameters
+        id: parameters
+        shell: bash
+        env:
+          EPM_GRAPH_CLIENT_SECRET: ${{ secrets.EPM_GRAPH_CLIENT_SECRET }}
+        run: |
+          set -euo pipefail
+          parameters_file="${RUNNER_TEMP}/epm-infrastructure-parameters.json"
+          echo "parameters_file=${parameters_file}" >> "${GITHUB_OUTPUT}"
+          az bicep build-params \
+            --file infrastructure/parameters/example.bicepparam \
+            --outfile "${parameters_file}"
+
+      - name: Run deployment what-if
+        shell: bash
+        env:
+          PARAMETERS_FILE: ${{ steps.parameters.outputs.parameters_file }}
+        run: |
+          set -euo pipefail
+          az deployment group what-if \
+            --resource-group "${AZURE_RESOURCE_GROUP}" \
+            --template-file infrastructure/main.bicep \
+            --parameters "@${PARAMETERS_FILE}" \
+            --no-pretty-print
+
+      - name: Deploy infrastructure
+        if: ${{ inputs.deploy == true }}
+        shell: bash
+        env:
+          PARAMETERS_FILE: ${{ steps.parameters.outputs.parameters_file }}
+        run: |
+          set -euo pipefail
+          az deployment group create \
+            --resource-group "${AZURE_RESOURCE_GROUP}" \
+            --template-file infrastructure/main.bicep \
+            --parameters "@${PARAMETERS_FILE}" \
+            --query properties.outputs \
+            --output json

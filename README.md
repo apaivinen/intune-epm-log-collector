@@ -947,7 +947,10 @@ AZURE_FUNCTION_APP_NAME
 
 ```text
 AZURE_CLIENT_SECRET
+EPM_GRAPH_CLIENT_SECRET
 ```
+
+`AZURE_CLIENT_SECRET` authenticates the infrastructure workflow. `EPM_GRAPH_CLIENT_SECRET` is the runtime Graph client secret supplied to the Function App through the secure Bicep parameter.
 
 Do not use GitHub Environments for this implementation.
 
@@ -1190,7 +1193,7 @@ The application should follow these principles:
 
 ## Phase 7 — CI/CD
 
-* [ ] Infrastructure workflow
+* [x] Infrastructure workflow
 * [ ] Function deployment workflow
 * [ ] PowerShell deployment script
 * [ ] Build validation
