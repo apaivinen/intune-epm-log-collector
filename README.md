@@ -1,5 +1,8 @@
 # Intune EPM Elevation Request Log Collector
 
+[![Infrastructure workflow](https://github.com/apaivinen/intune-epm-log-collector/actions/workflows/deploy-infrastructure.yml/badge.svg)](https://github.com/apaivinen/intune-epm-log-collector/actions/workflows/deploy-infrastructure.yml)
+[![Function deployment workflow](https://github.com/apaivinen/intune-epm-log-collector/actions/workflows/deploy-function.yml/badge.svg)](https://github.com/apaivinen/intune-epm-log-collector/actions/workflows/deploy-function.yml)
+
 Azure Function solution for collecting Microsoft Intune Endpoint Privilege Management (EPM) elevation requests from Microsoft Graph and ingesting them into an Azure Log Analytics workspace.
 
 The repository contains:
