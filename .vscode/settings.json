@@ -5,6 +5,10 @@
             "approve": true,
             "matchCommandLine": true
         },
-        "dotnet test": true
+        "dotnet test": true,
+        "command": true,
+        "true": true,
+        "printf": true,
+        "func": true
     }
 }

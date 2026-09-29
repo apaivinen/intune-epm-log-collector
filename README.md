@@ -1110,7 +1110,7 @@ The application should follow these principles:
 * [x] Create development container
 * [x] Create C# Function project
 * [x] Create test project
-* [ ] Verify local Function execution
+* [x] Verify local Function execution
 
 ## Phase 2 — Microsoft Graph
 
