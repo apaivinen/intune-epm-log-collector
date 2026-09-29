@@ -343,7 +343,7 @@ A dedicated Data Collection Rule should be created by the Bicep deployment.
 
 Where supported, the DCR's direct logs ingestion endpoint should be used.
 
-A separate Data Collection Endpoint can be introduced if required by network architecture, Private Link, or other deployment requirements.
+The Data Collection Rule is configured for direct ingestion and exposes its generated Logs Ingestion endpoint. A separate Data Collection Endpoint can be introduced if required by network architecture or Private Link.
 
 ---
 
@@ -1149,7 +1149,7 @@ The application should follow these principles:
 * [x] Storage Bicep module
 * [x] Application Insights integration
 * [x] Log Analytics table Bicep module
-* [ ] Data Collection Rule Bicep module
+* [x] Data Collection Rule Bicep module
 * [ ] RBAC Bicep module
 * [ ] Root deployment template
 * [ ] Parameter file

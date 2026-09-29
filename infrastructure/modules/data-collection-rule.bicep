@@ -13,9 +13,10 @@ var inputStreamName = 'Custom-EpmElevationRequests'
 var outputStreamName = 'Custom-EpmElevationRequests_CL'
 var logAnalyticsDestinationName = 'logAnalyticsDestination'
 
-resource dataCollectionRule 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
+resource dataCollectionRule 'Microsoft.Insights/dataCollectionRules@2024-03-11' = {
   name: ruleName
   location: location
+  kind: 'Direct'
   properties: {
     description: 'Routes Intune Endpoint Privilege Management elevation requests to Log Analytics.'
     destinations: {
@@ -145,5 +146,6 @@ resource dataCollectionRule 'Microsoft.Insights/dataCollectionRules@2023-03-11' 
 
 output dataCollectionRuleId string = dataCollectionRule.id
 output dataCollectionRuleImmutableId string = dataCollectionRule.properties.immutableId
+output logsIngestionEndpoint string = dataCollectionRule.properties.endpoints.logsIngestion
 output inputStreamName string = inputStreamName
 output outputStreamName string = outputStreamName
