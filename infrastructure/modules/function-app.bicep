@@ -16,7 +16,7 @@ param storageAccountName string
 param applicationInsightsComponentName string
 
 @secure()
-@description('Function runtime settings, including Graph credentials and Logs Ingestion configuration. Secrets must be supplied securely.')
+@description('Function runtime settings, including Logs Ingestion configuration.')
 param runtimeSettings object
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' existing = {
@@ -65,6 +65,9 @@ resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
   name: functionAppName
   location: location
   kind: 'functionapp,linux'
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
     serverFarmId: appServicePlan.id
     httpsOnly: true
@@ -82,3 +85,4 @@ resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
 output functionAppId string = functionApp.id
 output functionAppName string = functionApp.name
 output functionAppHostName string = functionApp.properties.defaultHostName
+output functionAppPrincipalId string = functionApp.identity.principalId

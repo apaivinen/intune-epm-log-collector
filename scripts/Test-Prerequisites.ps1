@@ -8,10 +8,10 @@ and optionally the target Data Collection Rule and its sender role assignment
 definition. It does not change Entra or Azure resources.
 
 .EXAMPLE
-./scripts/Test-Prerequisites.ps1 -TenantId <tenant-id> -ApplicationId <application-client-id>
+./scripts/Test-Prerequisites.ps1 -TenantId <tenant-id> -ServicePrincipalObjectId <managed-identity-principal-id>
 
 .EXAMPLE
-./scripts/Test-Prerequisites.ps1 -TenantId <tenant-id> -ApplicationId <application-client-id> `
+./scripts/Test-Prerequisites.ps1 -TenantId <tenant-id> -ServicePrincipalObjectId <managed-identity-principal-id> `
     -DataCollectionRuleResourceId <dcr-resource-id>
 #>
 [CmdletBinding()]
@@ -20,7 +20,7 @@ param(
     [guid] $TenantId,
 
     [Parameter(Mandatory)]
-    [guid] $ApplicationId,
+    [guid] $ServicePrincipalObjectId,
 
     [Parameter()]
     [ValidatePattern('^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft\.Insights/dataCollectionRules/[^/]+$')]
@@ -154,20 +154,11 @@ if ($null -ne $activeAccount) {
 
         if (-not [string]::IsNullOrWhiteSpace($script:GraphAccessToken)) {
             try {
-                $applicationFilter = [uri]::EscapeDataString("appId eq '$ApplicationId'")
-                $applications = @(Get-GraphCollection -Uri "$script:GraphBaseUrl/applications?`$filter=$applicationFilter&`$select=id,appId,displayName")
-                if ($applications.Count -ne 1) {
-                    throw "Expected one application with client ID $ApplicationId; found $($applications.Count)."
+                $runtimeServicePrincipal = Invoke-GraphGet -Uri "$script:GraphBaseUrl/servicePrincipals/$ServicePrincipalObjectId?`$select=id,appId,displayName"
+                if ($runtimeServicePrincipal.id -ne $ServicePrincipalObjectId.Guid) {
+                    throw "The service principal response did not match object ID $ServicePrincipalObjectId."
                 }
-                $application = $applications[0]
-                Add-Check -Name 'Runtime application' -Status PASS -Details "Found '$($application.displayName)'."
-
-                $servicePrincipals = @(Get-GraphCollection -Uri "$script:GraphBaseUrl/servicePrincipals?`$filter=$applicationFilter&`$select=id,appId,displayName")
-                if ($servicePrincipals.Count -ne 1) {
-                    throw "Expected one runtime service principal; found $($servicePrincipals.Count). Create the enterprise application before continuing."
-                }
-                $runtimeServicePrincipal = $servicePrincipals[0]
-                Add-Check -Name 'Runtime service principal' -Status PASS -Details "Found object ID $($runtimeServicePrincipal.id)."
+                Add-Check -Name 'Managed identity service principal' -Status PASS -Details "Found '$($runtimeServicePrincipal.displayName)'."
 
                 $graphServicePrincipalFilter = [uri]::EscapeDataString("appId eq '$script:GraphResourceAppId'")
                 $graphServicePrincipals = @(Get-GraphCollection -Uri "$script:GraphBaseUrl/servicePrincipals?`$filter=$graphServicePrincipalFilter&`$select=id,appId,displayName,appRoles")

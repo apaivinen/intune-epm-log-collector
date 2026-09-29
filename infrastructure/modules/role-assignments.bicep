@@ -3,8 +3,8 @@ targetScope = 'resourceGroup'
 @description('Name of the existing Data Collection Rule to which the runtime application sends logs.')
 param dataCollectionRuleName string
 
-@description('Object ID of the runtime service principal. This is not the application/client ID.')
-param runtimeServicePrincipalObjectId string
+@description('Principal ID of the Function App system-assigned managed identity.')
+param functionAppPrincipalId string
 
 var monitoringMetricsPublisherRoleDefinitionGuid = '3913510d-42f4-4e42-8a64-420c390055eb'
 
@@ -15,11 +15,11 @@ resource dataCollectionRule 'Microsoft.Insights/dataCollectionRules@2024-03-11' 
 resource runtimeDcrRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(
     dataCollectionRule.id,
-    runtimeServicePrincipalObjectId,
+    functionAppPrincipalId,
     monitoringMetricsPublisherRoleDefinitionGuid)
   scope: dataCollectionRule
   properties: {
-    principalId: runtimeServicePrincipalObjectId
+    principalId: functionAppPrincipalId
     principalType: 'ServicePrincipal'
     roleDefinitionId: subscriptionResourceId(
       'Microsoft.Authorization/roleDefinitions',

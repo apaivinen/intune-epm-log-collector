@@ -269,9 +269,9 @@ The Azure Function requires authentication for:
 1. Microsoft Graph
 2. Azure Monitor Logs Ingestion API
 
-The initial implementation uses an Entra application/service principal and client credentials.
+The Function App uses a system-assigned managed identity. No deployment application ID or client secret is used by the Function at runtime.
 
-The required application configuration must be provided to the Function App securely through Azure configuration.
+The managed identity acquires tokens for Microsoft Graph and Azure Monitor Logs Ingestion. Its Microsoft Graph application permission and DCR-scoped Azure RBAC assignment are configured during bootstrap.
 
 The repository must not contain runtime client secrets.
 
@@ -320,24 +320,24 @@ The required Azure RBAC assignment should be created against the smallest practi
 
 The RBAC module assigns the built-in `Monitoring Metrics Publisher` role to the runtime service principal at the DCR scope for Logs Ingestion API access.
 
-Run the bootstrap script from a PowerShell 7 session after signing in to the target tenant with Azure CLI:
+After infrastructure deployment, retrieve the `functionAppPrincipalId` output. Then run the bootstrap script from a PowerShell 7 session after signing in to the target tenant with Azure CLI:
 
 ```powershell
 az login --tenant <tenant-id>
 ./scripts/Initialize-EntraApplication.ps1 `
         -TenantId <tenant-id> `
-        -ApplicationId <runtime-application-client-id> `
+        -ServicePrincipalObjectId <function-app-principal-id> `
         -DataCollectionRuleResourceId <dcr-resource-id>
 ```
 
-The DCR argument is optional. The signed-in operator needs Microsoft Graph application/app-role assignment permissions; creating the optional Azure role assignment also requires permission to write role assignments at the DCR scope. The script configures an existing application and never creates or displays credentials.
+The DCR argument is optional. The signed-in operator needs Microsoft Graph application/app-role assignment permissions; creating the optional Azure role assignment also requires permission to write role assignments at the DCR scope. The script configures the existing managed-identity service principal and never creates or displays credentials.
 
 Run the read-only prerequisite check before configuring the application:
 
 ```powershell
 ./scripts/Test-Prerequisites.ps1 `
         -TenantId <tenant-id> `
-        -ApplicationId <runtime-application-client-id> `
+        -ServicePrincipalObjectId <function-app-principal-id> `
         -DataCollectionRuleResourceId <dcr-resource-id>
 ```
 
@@ -529,9 +529,6 @@ Example Function App settings:
 ```text
 EpmCollectionSchedule
 GraphBaseUrl
-GraphTenantId
-GraphClientId
-GraphClientSecret
 LogsIngestionEndpoint
 DataCollectionRuleImmutableId
 DataCollectionStreamName
@@ -947,10 +944,9 @@ AZURE_FUNCTION_APP_NAME
 
 ```text
 AZURE_CLIENT_SECRET
-EPM_GRAPH_CLIENT_SECRET
 ```
 
-`AZURE_CLIENT_SECRET` authenticates the infrastructure workflow. `EPM_GRAPH_CLIENT_SECRET` is the runtime Graph client secret supplied to the Function App through the secure Bicep parameter.
+`AZURE_CLIENT_SECRET` authenticates the GitHub deployment workflows. The Function App uses its system-assigned managed identity at runtime; no runtime Graph client secret is stored in GitHub or Azure app settings.
 
 Do not use GitHub Environments for this implementation.
 

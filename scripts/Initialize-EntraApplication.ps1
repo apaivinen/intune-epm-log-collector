@@ -3,7 +3,7 @@
 Configures Microsoft Graph application permission and optional DCR ingestion RBAC for an existing runtime application.
 
 .DESCRIPTION
-Uses the current Azure CLI login to locate the application and service principals, assign
+Uses the current Azure CLI login to locate the managed-identity service principal, assign
 DeviceManagementConfiguration.Read.All, verify the Graph app-role assignment, and optionally
 assign Monitoring Metrics Publisher at a Data Collection Rule scope.
 
@@ -12,10 +12,10 @@ permissions, plus permission to create Azure role assignments when a DCR scope i
 Run az login for the target tenant before running this script.
 
 .EXAMPLE
-./scripts/Initialize-EntraApplication.ps1 -TenantId <tenant-id> -ApplicationId <application-client-id>
+./scripts/Initialize-EntraApplication.ps1 -TenantId <tenant-id> -ServicePrincipalObjectId <managed-identity-principal-id>
 
 .EXAMPLE
-./scripts/Initialize-EntraApplication.ps1 -TenantId <tenant-id> -ApplicationId <application-client-id> `
+./scripts/Initialize-EntraApplication.ps1 -TenantId <tenant-id> -ServicePrincipalObjectId <managed-identity-principal-id> `
     -DataCollectionRuleResourceId <dcr-resource-id> -WhatIf
 #>
 [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
@@ -24,7 +24,7 @@ param(
     [guid] $TenantId,
 
     [Parameter(Mandatory)]
-    [guid] $ApplicationId,
+    [guid] $ServicePrincipalObjectId,
 
     [Parameter()]
     [ValidatePattern('^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft\.Insights/dataCollectionRules/[^/]+$')]
@@ -136,20 +136,11 @@ if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($script:GraphAccessToke
     throw 'Unable to obtain a Microsoft Graph access token from the current Azure CLI session.'
 }
 
-$applicationFilter = [uri]::EscapeDataString("appId eq '$ApplicationId'")
-$applicationUri = "$graphBaseUrl/applications?`$filter=$applicationFilter&`$select=id,appId,displayName"
-$applications = @(Get-GraphCollection -Uri $applicationUri)
-if ($applications.Count -ne 1) {
-    throw "Expected one application with client ID $ApplicationId; found $($applications.Count)."
+$runtimeServicePrincipalUri = "$graphBaseUrl/servicePrincipals/$ServicePrincipalObjectId?`$select=id,appId,displayName"
+$runtimeServicePrincipal = Invoke-GraphRequest -Method GET -Uri $runtimeServicePrincipalUri
+if ($runtimeServicePrincipal.id -ne $ServicePrincipalObjectId.Guid) {
+    throw "The service principal response did not match object ID $ServicePrincipalObjectId."
 }
-$application = $applications[0]
-
-$servicePrincipalUri = "$graphBaseUrl/servicePrincipals?`$filter=$applicationFilter&`$select=id,appId,displayName"
-$servicePrincipals = @(Get-GraphCollection -Uri $servicePrincipalUri)
-if ($servicePrincipals.Count -ne 1) {
-    throw "Expected one service principal for application $ApplicationId; found $($servicePrincipals.Count). Ensure the enterprise application exists in this tenant."
-}
-$runtimeServicePrincipal = $servicePrincipals[0]
 
 $graphServicePrincipalFilter = [uri]::EscapeDataString("appId eq '$graphResourceAppId'")
 $graphServicePrincipalUri = "$graphBaseUrl/servicePrincipals?`$filter=$graphServicePrincipalFilter&`$select=id,appId,displayName,appRoles"
@@ -177,7 +168,7 @@ $hasGraphPermission = @($existingGraphAssignments | Where-Object {
 if ($hasGraphPermission) {
     $graphPermissionStatus = 'AlreadyAssigned'
 }
-elseif ($PSCmdlet.ShouldProcess($application.displayName, "Assign Microsoft Graph $requiredGraphPermission application permission")) {
+elseif ($PSCmdlet.ShouldProcess($runtimeServicePrincipal.displayName, "Assign Microsoft Graph $requiredGraphPermission application permission")) {
     $assignment = @{
         principalId = $runtimeServicePrincipal.id
         resourceId  = $graphServicePrincipal.id
@@ -218,7 +209,7 @@ if (-not [string]::IsNullOrWhiteSpace($DataCollectionRuleResourceId)) {
     if ($existingDcrAssignment.Count -gt 0) {
         $dcrRoleStatus = 'AlreadyAssigned'
     }
-    elseif ($PSCmdlet.ShouldProcess($DataCollectionRuleResourceId, "Assign $dcrSenderRoleName to $($application.displayName)")) {
+    elseif ($PSCmdlet.ShouldProcess($DataCollectionRuleResourceId, "Assign $dcrSenderRoleName to $($runtimeServicePrincipal.displayName)")) {
         Invoke-AzCliJson -Arguments @(
             'role', 'assignment', 'create',
             '--assignee-object-id', $runtimeServicePrincipal.id,
@@ -254,8 +245,8 @@ Remove-Variable GraphAccessToken -Scope Script -ErrorAction SilentlyContinue
 
 [pscustomobject] @{
     TenantId                       = $TenantId
-    ApplicationId                  = $application.appId
-    ApplicationName                = $application.displayName
+    ServicePrincipalAppId          = $runtimeServicePrincipal.appId
+    ServicePrincipalName           = $runtimeServicePrincipal.displayName
     ServicePrincipalObjectId       = $runtimeServicePrincipal.id
     GraphApplicationPermission     = $requiredGraphPermission
     GraphPermissionStatus          = $graphPermissionStatus

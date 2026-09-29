@@ -19,22 +19,7 @@ var host = new HostBuilder()
             .UseFunctionsWorkerDefaults()
             .UseAzureMonitorExporter();
 
-        services.AddOptions<GraphAuthenticationOptions>()
-            .Configure(options =>
-            {
-                options.TenantId = context.Configuration[GraphAuthenticationOptions.TenantIdSetting] ?? string.Empty;
-                options.ClientId = context.Configuration[GraphAuthenticationOptions.ClientIdSetting] ?? string.Empty;
-                options.ClientSecret = context.Configuration[GraphAuthenticationOptions.ClientSecretSetting] ?? string.Empty;
-            })
-            .Validate(options => !string.IsNullOrWhiteSpace(options.TenantId), "GraphTenantId must be configured.")
-            .Validate(options => !string.IsNullOrWhiteSpace(options.ClientId), "GraphClientId must be configured.")
-            .Validate(options => !string.IsNullOrWhiteSpace(options.ClientSecret), "GraphClientSecret must be configured.");
-
-        services.AddSingleton<TokenCredential>(serviceProvider =>
-        {
-            var options = serviceProvider.GetRequiredService<IOptions<GraphAuthenticationOptions>>().Value;
-            return new ClientSecretCredential(options.TenantId, options.ClientId, options.ClientSecret);
-        });
+        services.AddSingleton<TokenCredential>(_ => new ManagedIdentityCredential(new ManagedIdentityCredentialOptions()));
         services.AddSingleton<IGraphAuthenticationService, GraphAuthenticationService>();
 
         services.AddOptions<GraphApiOptions>()

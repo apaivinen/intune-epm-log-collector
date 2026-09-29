@@ -38,7 +38,6 @@ jobs:
           AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
           AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          EPM_GRAPH_CLIENT_SECRET: ${{ secrets.EPM_GRAPH_CLIENT_SECRET }}
         run: |
           set -euo pipefail
           required=(
@@ -48,7 +47,6 @@ jobs:
             AZURE_RESOURCE_GROUP
             AZURE_LOCATION
             AZURE_CLIENT_SECRET
-            EPM_GRAPH_CLIENT_SECRET
           )
           for variable in "${required[@]}"; do
             if [[ -z "${!variable}" ]]; then
@@ -66,8 +64,6 @@ jobs:
       - name: Compile deployment parameters
         id: parameters
         shell: bash
-        env:
-          EPM_GRAPH_CLIENT_SECRET: ${{ secrets.EPM_GRAPH_CLIENT_SECRET }}
         run: |
           set -euo pipefail
           parameters_file="${RUNNER_TEMP}/epm-infrastructure-parameters.json"

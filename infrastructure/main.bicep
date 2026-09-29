@@ -23,20 +23,6 @@ param applicationInsightsName string
 @description('Name of the Data Collection Rule.')
 param dataCollectionRuleName string = 'dcr-epm-log-collector'
 
-@description('Object ID of the runtime service principal that sends data to the DCR.')
-param runtimeServicePrincipalObjectId string
-
-@description('Tenant ID of the Microsoft Graph application.')
-param graphTenantId string
-
-@description('Client ID of the Microsoft Graph application.')
-param graphClientId string
-
-@secure()
-@minLength(1)
-@description('Client secret for the Microsoft Graph application. Supply it through a secure deployment parameter.')
-param graphClientSecret string
-
 @description('Function timer schedule in NCRONTAB format.')
 param epmCollectionSchedule string = '0 */5 * * * *'
 
@@ -78,9 +64,6 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10
 var functionRuntimeSettings = {
   EpmCollectionSchedule: epmCollectionSchedule
   GraphBaseUrl: graphBaseUrl
-  GraphTenantId: graphTenantId
-  GraphClientId: graphClientId
-  GraphClientSecret: graphClientSecret
   LogsIngestionEndpoint: dataCollectionRuleModule.outputs.logsIngestionEndpoint
   DataCollectionRuleImmutableId: dataCollectionRuleModule.outputs.dataCollectionRuleImmutableId
   DataCollectionStreamName: dataCollectionRuleModule.outputs.inputStreamName
@@ -144,16 +127,14 @@ module functionAppModule 'modules/function-app.bicep' = {
 module roleAssignmentsModule 'modules/role-assignments.bicep' = {
   params: {
     dataCollectionRuleName: dataCollectionRuleName
-    runtimeServicePrincipalObjectId: runtimeServicePrincipalObjectId
+    functionAppPrincipalId: functionAppModule.outputs.functionAppPrincipalId
   }
-  dependsOn: [
-    dataCollectionRuleModule
-  ]
 }
 
 output functionAppId string = functionAppModule.outputs.functionAppId
 output functionAppName string = functionAppModule.outputs.functionAppName
 output functionAppHostName string = functionAppModule.outputs.functionAppHostName
+output functionAppPrincipalId string = functionAppModule.outputs.functionAppPrincipalId
 output storageAccountId string = storageModule.outputs.storageAccountId
 output applicationInsightsComponentId string = applicationInsightsModule.outputs.componentId
 output logAnalyticsTableId string = logAnalyticsTableModule.outputs.tableId
