@@ -1148,7 +1148,7 @@ The application should follow these principles:
 * [x] Function App Bicep module
 * [x] Storage Bicep module
 * [x] Application Insights integration
-* [ ] Log Analytics table Bicep module
+* [x] Log Analytics table Bicep module
 * [ ] Data Collection Rule Bicep module
 * [ ] RBAC Bicep module
 * [ ] Root deployment template
