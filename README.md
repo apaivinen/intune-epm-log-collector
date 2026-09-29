@@ -1124,7 +1124,7 @@ The application should follow these principles:
 ## Phase 3 — Collection State
 
 * [x] Implement Blob Storage checkpoint service
-* [ ] Implement timestamp filtering
+* [x] Implement timestamp filtering
 * [ ] Implement collection overlap
 * [ ] Verify recovery after failed runs
 
