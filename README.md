@@ -1114,7 +1114,7 @@ The application should follow these principles:
 
 ## Phase 2 — Microsoft Graph
 
-* [ ] Create Graph authentication service
+* [x] Create Graph authentication service
 * [ ] Implement elevation request model
 * [ ] Implement `/beta/deviceManagement/elevationRequests`
 * [ ] Implement pagination
