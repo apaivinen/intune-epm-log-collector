@@ -1118,7 +1118,7 @@ The application should follow these principles:
 * [x] Implement elevation request model
 * [x] Implement `/beta/deviceManagement/elevationRequests`
 * [x] Implement pagination
-* [ ] Implement retry handling
+* [x] Implement retry handling
 * [ ] Create Graph unit tests
 
 ## Phase 3 — Collection State

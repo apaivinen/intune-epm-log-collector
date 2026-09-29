@@ -60,8 +60,12 @@ public sealed class GraphClientTests
     [Fact]
     public async Task GetElevationRequestsAsync_ThrowsForUnsuccessfulResponse()
     {
+        var requestCount = 0;
         using var httpClient = new HttpClient(new StubHttpMessageHandler((_, _) =>
-            Task.FromResult(new HttpResponseMessage(HttpStatusCode.Forbidden))));
+        {
+            requestCount++;
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.Forbidden));
+        }));
         var client = new GraphClient(
             httpClient,
             new StubGraphAuthenticationService(),
@@ -71,6 +75,85 @@ public sealed class GraphClientTests
             () => client.GetElevationRequestsAsync());
 
         Assert.Equal(HttpStatusCode.Forbidden, exception.StatusCode);
+        Assert.Equal(1, requestCount);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.RequestTimeout)]
+    [InlineData(HttpStatusCode.TooManyRequests)]
+    [InlineData(HttpStatusCode.ServiceUnavailable)]
+    public async Task GetElevationRequestsAsync_RetriesTransientStatusCodes(HttpStatusCode transientStatusCode)
+    {
+        var requestCount = 0;
+        using var httpClient = new HttpClient(new StubHttpMessageHandler((_, _) =>
+        {
+            requestCount++;
+            if (requestCount == 1)
+            {
+                var transientResponse = new HttpResponseMessage(transientStatusCode);
+                transientResponse.Headers.RetryAfter = new RetryConditionHeaderValue(TimeSpan.Zero);
+                return Task.FromResult(transientResponse);
+            }
+
+            return Task.FromResult(CreateSuccessResponse());
+        }));
+        var client = new GraphClient(
+            httpClient,
+            new StubGraphAuthenticationService(),
+            Options.Create(new GraphApiOptions()));
+
+        var requests = await client.GetElevationRequestsAsync();
+
+        Assert.Single(requests);
+        Assert.Equal(2, requestCount);
+    }
+
+    [Fact]
+    public async Task GetElevationRequestsAsync_RetriesTransportFailure()
+    {
+        var requestCount = 0;
+        using var httpClient = new HttpClient(new StubHttpMessageHandler((_, _) =>
+        {
+            requestCount++;
+            if (requestCount == 1)
+            {
+                throw new HttpRequestException("Temporary network failure.");
+            }
+
+            return Task.FromResult(CreateSuccessResponse());
+        }));
+        var client = new GraphClient(
+            httpClient,
+            new StubGraphAuthenticationService(),
+            Options.Create(new GraphApiOptions()));
+
+        var requests = await client.GetElevationRequestsAsync();
+
+        Assert.Single(requests);
+        Assert.Equal(2, requestCount);
+    }
+
+    [Fact]
+    public async Task GetElevationRequestsAsync_StopsAfterMaximumRetryAttempts()
+    {
+        var requestCount = 0;
+        using var httpClient = new HttpClient(new StubHttpMessageHandler((_, _) =>
+        {
+            requestCount++;
+            var transientResponse = new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
+            transientResponse.Headers.RetryAfter = new RetryConditionHeaderValue(TimeSpan.Zero);
+            return Task.FromResult(transientResponse);
+        }));
+        var client = new GraphClient(
+            httpClient,
+            new StubGraphAuthenticationService(),
+            Options.Create(new GraphApiOptions()));
+
+        var exception = await Assert.ThrowsAsync<HttpRequestException>(
+            () => client.GetElevationRequestsAsync());
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, exception.StatusCode);
+        Assert.Equal(4, requestCount);
     }
 
     [Fact]
@@ -178,5 +261,19 @@ public sealed class GraphClientTests
         {
             return sendAsync(request, cancellationToken);
         }
+    }
+
+    private static HttpResponseMessage CreateSuccessResponse()
+    {
+        const string json = """
+            {
+              "value": [{ "id": "request-123" }]
+            }
+            """;
+
+        return new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(json, Encoding.UTF8, "application/json")
+        };
     }
 }
