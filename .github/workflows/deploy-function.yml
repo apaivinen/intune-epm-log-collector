@@ -1,0 +1,82 @@
+name: Deploy Function
+
+'on':
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+  AZURE_FUNCTION_APP_NAME: ${{ vars.AZURE_FUNCTION_APP_NAME }}
+
+jobs:
+  function:
+    name: Build, test, and deploy Function
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: '{"clientId":"${{ vars.AZURE_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}","subscriptionId":"${{ vars.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ vars.AZURE_TENANT_ID }}"}'
+
+      - name: Validate required configuration
+        shell: bash
+        env:
+          AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          AZURE_FUNCTION_APP_NAME: ${{ vars.AZURE_FUNCTION_APP_NAME }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        run: |
+          set -euo pipefail
+          required=(
+            AZURE_CLIENT_ID
+            AZURE_TENANT_ID
+            AZURE_SUBSCRIPTION_ID
+            AZURE_RESOURCE_GROUP
+            AZURE_FUNCTION_APP_NAME
+            AZURE_CLIENT_SECRET
+          )
+          for variable in "${required[@]}"; do
+            if [[ -z "${!variable}" ]]; then
+              echo "Required GitHub variable or secret is missing: ${variable}" >&2
+              exit 1
+            fi
+          done
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Run tests
+        run: dotnet test tests/EpmLogCollector.Tests/EpmLogCollector.Tests.csproj --configuration Release --no-build --no-restore
+
+      - name: Publish Function
+        run: dotnet publish src/EpmLogCollector/EpmLogCollector.csproj --configuration Release --no-restore --output ./publish/function
+
+      - name: Package Function
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ./publish
+          (cd ./publish/function && zip -qr ../function.zip .)
+
+      - name: Deploy Function
+        shell: pwsh
+        run: |
+          ./scripts/Deploy-Function.ps1 `
+            -ResourceGroupName $env:AZURE_RESOURCE_GROUP `
+            -FunctionAppName $env:AZURE_FUNCTION_APP_NAME `
+            -PackagePath './publish/function.zip'
