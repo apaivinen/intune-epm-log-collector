@@ -131,7 +131,12 @@ var host = new HostBuilder()
         {
             var options = serviceProvider.GetRequiredService<IOptions<LogsIngestionOptions>>().Value;
             var credential = serviceProvider.GetRequiredService<TokenCredential>();
-            return new Azure.Monitor.Ingestion.LogsIngestionClient(new Uri(options.Endpoint), credential);
+            var clientOptions = new Azure.Monitor.Ingestion.LogsIngestionClientOptions();
+            clientOptions.Retry.MaxRetries = 0;
+            return new Azure.Monitor.Ingestion.LogsIngestionClient(
+                new Uri(options.Endpoint),
+                credential,
+                clientOptions);
         });
         services.AddSingleton<ILogsIngestionTransport, AzureMonitorLogsIngestionTransport>();
         services.AddSingleton<LogsIngestionClient>();

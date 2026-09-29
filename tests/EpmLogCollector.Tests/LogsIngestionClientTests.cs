@@ -88,6 +88,76 @@ public sealed class LogsIngestionClientTests
         Assert.Equal(0, transport.CallCount);
     }
 
+    [Fact]
+    public async Task UploadAsync_RetriesTransientFailureAndHonorsRetryAfter()
+    {
+        var transport = new RecordingLogsIngestionTransport
+        {
+            FailureForCall = call => call == 1
+                ? new LogsIngestionTransportException(429, TimeSpan.Zero, new HttpRequestException("Throttled."))
+                : null
+        };
+        var client = CreateClient(transport, 100_000);
+        var record = new EpmElevationRequestLog
+        {
+            TimeGenerated = DateTimeOffset.UtcNow,
+            ElevationRequestId = "request-123",
+            IngestionTime = DateTimeOffset.UtcNow
+        };
+
+        await client.UploadAsync([record]);
+
+        Assert.Equal(2, transport.CallCount);
+        Assert.Single(transport.Batches[0]);
+        Assert.Single(transport.Batches[1]);
+    }
+
+    [Fact]
+    public async Task UploadAsync_DoesNotRetryNonTransientTransportFailures()
+    {
+        var transport = new RecordingLogsIngestionTransport
+        {
+            FailureForCall = _ => new LogsIngestionTransportException(
+                400,
+                TimeSpan.Zero,
+                new InvalidOperationException("Invalid request configuration."))
+        };
+        var client = CreateClient(transport, 100_000);
+        var record = new EpmElevationRequestLog
+        {
+            TimeGenerated = DateTimeOffset.UtcNow,
+            ElevationRequestId = "request-123",
+            IngestionTime = DateTimeOffset.UtcNow
+        };
+
+        await Assert.ThrowsAsync<LogsIngestionTransportException>(() => client.UploadAsync([record]));
+
+        Assert.Equal(1, transport.CallCount);
+    }
+
+    [Fact]
+    public async Task UploadAsync_StopsAfterMaximumRetryAttempts()
+    {
+        var transport = new RecordingLogsIngestionTransport
+        {
+            FailureForCall = _ => new LogsIngestionTransportException(
+                503,
+                TimeSpan.Zero,
+                new HttpRequestException("Service unavailable."))
+        };
+        var client = CreateClient(transport, 100_000);
+        var record = new EpmElevationRequestLog
+        {
+            TimeGenerated = DateTimeOffset.UtcNow,
+            ElevationRequestId = "request-123",
+            IngestionTime = DateTimeOffset.UtcNow
+        };
+
+        await Assert.ThrowsAsync<LogsIngestionTransportException>(() => client.UploadAsync([record]));
+
+        Assert.Equal(4, transport.CallCount);
+    }
+
     private static LogsIngestionClient CreateClient(RecordingLogsIngestionTransport transport, int maxBatchSizeBytes)
     {
         return new LogsIngestionClient(
@@ -112,6 +182,7 @@ public sealed class LogsIngestionClientTests
         public string? StreamName { get; private set; }
         public List<List<BinaryData>> Batches { get; } = [];
         public int CallCount { get; private set; }
+        public Func<int, Exception?>? FailureForCall { get; init; }
 
         public Task UploadAsync(
             string dataCollectionRuleImmutableId,
@@ -123,6 +194,11 @@ public sealed class LogsIngestionClientTests
             StreamName = streamName;
             Batches.Add(logs.ToList());
             CallCount++;
+            if (FailureForCall?.Invoke(CallCount) is { } exception)
+            {
+                throw exception;
+            }
+
             return Task.CompletedTask;
         }
     }

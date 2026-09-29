@@ -1139,7 +1139,7 @@ The application should follow these principles:
 * [x] Implement Log Analytics model
 * [x] Implement Logs Ingestion API client
 * [x] Implement batching
-* [ ] Implement ingestion retries
+* [x] Implement ingestion retries
 
 ## Phase 5 — Infrastructure
 

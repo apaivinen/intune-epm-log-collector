@@ -9,6 +9,7 @@ public sealed class LogsIngestionClient(
     ILogsIngestionTransport transport,
     IOptions<LogsIngestionOptions> options)
 {
+    private const int MaxRetryAttempts = 3;
     private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
 
     public async Task UploadAsync(
@@ -64,10 +65,60 @@ public sealed class LogsIngestionClient(
             return Task.CompletedTask;
         }
 
-        return transport.UploadAsync(
-            ingestionOptions.DataCollectionRuleImmutableId,
-            ingestionOptions.StreamName,
-            batch,
-            cancellationToken);
+        return UploadBatchWithRetryAsync(batch, ingestionOptions, cancellationToken);
+    }
+
+    private async Task UploadBatchWithRetryAsync(
+        IReadOnlyCollection<BinaryData> batch,
+        LogsIngestionOptions ingestionOptions,
+        CancellationToken cancellationToken)
+    {
+        for (var attempt = 0; ; attempt++)
+        {
+            try
+            {
+                await transport.UploadAsync(
+                    ingestionOptions.DataCollectionRuleImmutableId,
+                    ingestionOptions.StreamName,
+                    batch,
+                    cancellationToken);
+                return;
+            }
+            catch (LogsIngestionTransportException exception) when (
+                IsTransientStatusCode(exception.StatusCode)
+                && attempt < MaxRetryAttempts)
+            {
+                await Task.Delay(GetRetryDelay(exception.RetryAfter, attempt), cancellationToken);
+            }
+            catch (HttpRequestException) when (attempt < MaxRetryAttempts)
+            {
+                await Task.Delay(GetExponentialRetryDelay(attempt), cancellationToken);
+            }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested
+                && attempt < MaxRetryAttempts)
+            {
+                await Task.Delay(GetExponentialRetryDelay(attempt), cancellationToken);
+            }
+        }
+    }
+
+    private static TimeSpan GetRetryDelay(TimeSpan? retryAfter, int attempt)
+    {
+        if (retryAfter is { } delay)
+        {
+            return delay > TimeSpan.Zero ? delay : TimeSpan.Zero;
+        }
+
+        return GetExponentialRetryDelay(attempt);
+    }
+
+    private static TimeSpan GetExponentialRetryDelay(int attempt)
+    {
+        return TimeSpan.FromSeconds(Math.Min(30, 1 << attempt));
+    }
+
+    private static bool IsTransientStatusCode(int statusCode)
+    {
+        return statusCode is 0 or 408 or 429 || statusCode is >= 500 and <= 599;
     }
 }
