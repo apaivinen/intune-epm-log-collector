@@ -1,5 +1,7 @@
 using EpmLogCollector.Models.Graph;
 using EpmLogCollector.Services;
+using EpmLogCollector.Configuration;
+using Microsoft.Extensions.Options;
 using Xunit;
 
 namespace EpmLogCollector.Tests;
@@ -32,7 +34,7 @@ public sealed class ElevationRequestTimestampFilterTests
             }
         };
 
-        var filtered = ElevationRequestTimestampFilter.FilterNewerThan(requests, watermark);
+        var filtered = CreateFilter(TimeSpan.Zero).FilterNewerThan(requests, watermark);
 
         var request = Assert.Single(filtered);
         Assert.Equal("created-before-but-updated-after", request.Id);
@@ -48,7 +50,7 @@ public sealed class ElevationRequestTimestampFilterTests
             RequestCreatedDateTime = watermark.AddMinutes(1)
         };
 
-        var filtered = ElevationRequestTimestampFilter.FilterNewerThan([request], watermark);
+        var filtered = CreateFilter(TimeSpan.Zero).FilterNewerThan([request], watermark);
 
         Assert.Same(request, Assert.Single(filtered));
     }
@@ -62,7 +64,7 @@ public sealed class ElevationRequestTimestampFilterTests
             new ElevationRequest { Id = "second", RequestCreatedDateTime = DateTimeOffset.UtcNow }
         };
 
-        var filtered = ElevationRequestTimestampFilter.FilterNewerThan(requests, null);
+        var filtered = CreateFilter(TimeSpan.FromMinutes(5)).FilterNewerThan(requests, null);
 
         Assert.Equal(requests, filtered);
     }
@@ -73,6 +75,40 @@ public sealed class ElevationRequestTimestampFilterTests
         var request = new ElevationRequest { Id = "missing-timestamp" };
 
         Assert.Throws<InvalidDataException>(
-            () => ElevationRequestTimestampFilter.FilterNewerThan([request], null));
+            () => CreateFilter(TimeSpan.FromMinutes(5)).FilterNewerThan([request], null));
+    }
+
+    [Fact]
+    public void FilterNewerThan_IncludesRequestsAtOrAfterTheOverlappedWatermark()
+    {
+        var watermark = DateTimeOffset.Parse("2026-09-29T12:00:00Z");
+        var requests = new[]
+        {
+            new ElevationRequest { Id = "before-window", RequestCreatedDateTime = watermark.AddMinutes(-6) },
+            new ElevationRequest { Id = "at-window-start", RequestCreatedDateTime = watermark.AddMinutes(-5) },
+            new ElevationRequest { Id = "within-window", RequestCreatedDateTime = watermark.AddMinutes(-4) },
+            new ElevationRequest { Id = "after-watermark", RequestCreatedDateTime = watermark.AddMinutes(1) }
+        };
+
+        var filtered = CreateFilter(TimeSpan.FromMinutes(5)).FilterNewerThan(requests, watermark);
+
+        Assert.Equal(["at-window-start", "within-window", "after-watermark"], filtered.Select(request => request.Id));
+    }
+
+    [Fact]
+    public void FilterNewerThan_RejectsNegativeOverlap()
+    {
+        var filter = CreateFilter(TimeSpan.FromMinutes(-1));
+        var request = new ElevationRequest { Id = "request", RequestCreatedDateTime = DateTimeOffset.UtcNow };
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => filter.FilterNewerThan([request], DateTimeOffset.UtcNow));
+    }
+
+    private static ElevationRequestTimestampFilter CreateFilter(TimeSpan overlapWindow)
+    {
+        return new ElevationRequestTimestampFilter(Options.Create(new CollectionOptions
+        {
+            OverlapWindow = overlapWindow
+        }));
     }
 }

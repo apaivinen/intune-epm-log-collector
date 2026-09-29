@@ -1,3 +1,4 @@
+using System.Globalization;
 using Azure.Core;
 using Azure.Identity;
 using Azure.Storage.Blobs;
@@ -73,6 +74,25 @@ var host = new HostBuilder()
             return new BlobCheckpointStore(containerClient, options.BlobName);
         });
         services.AddSingleton<ICheckpointService, BlobCheckpointService>();
+
+        services.AddOptions<CollectionOptions>()
+            .Configure(options =>
+            {
+                var configuredOverlap = context.Configuration[CollectionOptions.OverlapWindowSetting];
+                if (string.IsNullOrWhiteSpace(configuredOverlap))
+                {
+                    return;
+                }
+
+                if (!TimeSpan.TryParse(configuredOverlap, CultureInfo.InvariantCulture, out var overlapWindow))
+                {
+                    throw new InvalidOperationException("CollectionOverlap must be a valid TimeSpan, such as 00:05:00.");
+                }
+
+                options.OverlapWindow = overlapWindow;
+            })
+            .Validate(options => options.OverlapWindow >= TimeSpan.Zero, "CollectionOverlap cannot be negative.");
+        services.AddSingleton<ElevationRequestTimestampFilter>();
     })
     .Build();
 

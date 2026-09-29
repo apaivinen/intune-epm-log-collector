@@ -510,6 +510,7 @@ DataCollectionRuleImmutableId
 DataCollectionStreamName
 CheckpointContainerName
 CheckpointBlobName
+CollectionOverlap
 ```
 
 Example values:
@@ -519,6 +520,7 @@ GraphBaseUrl=https://graph.microsoft.com/beta
 DataCollectionStreamName=Custom-EpmElevationRequests
 CheckpointContainerName=checkpoints
 CheckpointBlobName=epm-elevation-requests.json
+CollectionOverlap=00:05:00
 ```
 
 Secrets must never be committed to:
@@ -1125,7 +1127,7 @@ The application should follow these principles:
 
 * [x] Implement Blob Storage checkpoint service
 * [x] Implement timestamp filtering
-* [ ] Implement collection overlap
+* [x] Implement collection overlap
 * [ ] Verify recovery after failed runs
 
 ## Phase 4 — Log Analytics

@@ -1,20 +1,32 @@
+using EpmLogCollector.Configuration;
 using EpmLogCollector.Models.Graph;
+using Microsoft.Extensions.Options;
 
 namespace EpmLogCollector.Services;
 
-public static class ElevationRequestTimestampFilter
+public sealed class ElevationRequestTimestampFilter(IOptions<CollectionOptions> options)
 {
-    public static IReadOnlyList<ElevationRequest> FilterNewerThan(
+    public IReadOnlyList<ElevationRequest> FilterNewerThan(
         IEnumerable<ElevationRequest> requests,
         DateTimeOffset? watermark)
     {
         ArgumentNullException.ThrowIfNull(requests);
 
+        var overlapWindow = options.Value.OverlapWindow;
+        if (overlapWindow < TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(options), "The collection overlap window cannot be negative.");
+        }
+
+        var filterStart = watermark?.Subtract(overlapWindow);
         var filteredRequests = new List<ElevationRequest>();
         foreach (var request in requests)
         {
             var timestamp = GetTimestamp(request);
-            if (watermark is null || timestamp > watermark.Value)
+            if (filterStart is null
+                || (overlapWindow == TimeSpan.Zero
+                    ? timestamp > filterStart.Value
+                    : timestamp >= filterStart.Value))
             {
                 filteredRequests.Add(request);
             }
