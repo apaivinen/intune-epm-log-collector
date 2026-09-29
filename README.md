@@ -1154,7 +1154,7 @@ The application should follow these principles:
 * [x] Data Collection Rule Bicep module
 * [x] RBAC Bicep module
 * [x] Root deployment template
-* [ ] Parameter file
+* [x] Parameter file
 
 ## Phase 6 — Identity Bootstrap
 

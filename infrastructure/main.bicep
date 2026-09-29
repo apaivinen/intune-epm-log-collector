@@ -33,6 +33,7 @@ param graphTenantId string
 param graphClientId string
 
 @secure()
+@minLength(1)
 @description('Client secret for the Microsoft Graph application. Supply it through a secure deployment parameter.')
 param graphClientSecret string
 
