@@ -4,6 +4,7 @@
         "/^git status --short && dotnet --info \\| head -35$/": {
             "approve": true,
             "matchCommandLine": true
-        }
+        },
+        "dotnet test": true
     }
 }

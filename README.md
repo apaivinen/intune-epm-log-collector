@@ -1109,7 +1109,7 @@ The application should follow these principles:
 * [x] Create `.gitattributes`
 * [x] Create development container
 * [x] Create C# Function project
-* [ ] Create test project
+* [x] Create test project
 * [ ] Verify local Function execution
 
 ## Phase 2 — Microsoft Graph
