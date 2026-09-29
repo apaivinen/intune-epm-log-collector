@@ -1146,7 +1146,7 @@ The application should follow these principles:
 ## Phase 5 — Infrastructure
 
 * [x] Function App Bicep module
-* [ ] Storage Bicep module
+* [x] Storage Bicep module
 * [ ] Application Insights integration
 * [ ] Log Analytics table Bicep module
 * [ ] Data Collection Rule Bicep module
