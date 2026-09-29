@@ -1171,8 +1171,8 @@ The application should follow these principles:
 ## Phase 6 — Identity Bootstrap
 
 * [x] Create `Initialize-EntraApplication.ps1`
-* [ ] Resolve Microsoft Graph service principal
-* [ ] Assign Graph application role
+* [x] Resolve Microsoft Graph service principal
+* [x] Assign Graph application role
 * [ ] Validate Graph permission
 * [ ] Configure Azure RBAC
 * [ ] Add prerequisite validation
