@@ -188,6 +188,8 @@ The isolated worker model should be used so that the application does not depend
 > [!IMPORTANT]
 > .NET 10 Azure Functions apps are not supported on the Linux Consumption plan. Use Flex Consumption, Premium, or Dedicated when hosting on Linux.
 
+The Function App Bicep module targets an existing Linux Premium or Dedicated plan and storage account. Runtime settings are supplied as a secure module parameter; credentials are not embedded in the template.
+
 ---
 
 ## Function Trigger
@@ -1143,7 +1145,7 @@ The application should follow these principles:
 
 ## Phase 5 — Infrastructure
 
-* [ ] Function App Bicep module
+* [x] Function App Bicep module
 * [ ] Storage Bicep module
 * [ ] Application Insights integration
 * [ ] Log Analytics table Bicep module
