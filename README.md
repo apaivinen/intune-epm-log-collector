@@ -1133,7 +1133,7 @@ The application should follow these principles:
 ## Phase 4 — Log Analytics
 
 * [x] Define custom table schema
-* [ ] Define DCR stream
+* [x] Define DCR stream
 * [ ] Implement Log Analytics model
 * [ ] Implement Logs Ingestion API client
 * [ ] Implement batching
