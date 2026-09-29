@@ -1108,7 +1108,7 @@ The application should follow these principles:
 * [x] Create `.gitignore`
 * [x] Create `.gitattributes`
 * [x] Create development container
-* [ ] Create C# Function project
+* [x] Create C# Function project
 * [ ] Create test project
 * [ ] Verify local Function execution
 

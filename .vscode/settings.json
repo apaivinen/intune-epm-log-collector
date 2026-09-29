@@ -1,5 +1,9 @@
 {
     "chat.tools.terminal.autoApprove": {
-        "docker run": true
+        "docker run": true,
+        "/^git status --short && dotnet --info \\| head -35$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
     }
 }
