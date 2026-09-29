@@ -1117,7 +1117,7 @@ The application should follow these principles:
 * [x] Create Graph authentication service
 * [x] Implement elevation request model
 * [x] Implement `/beta/deviceManagement/elevationRequests`
-* [ ] Implement pagination
+* [x] Implement pagination
 * [ ] Implement retry handling
 * [ ] Create Graph unit tests
 
