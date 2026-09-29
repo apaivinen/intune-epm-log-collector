@@ -1135,7 +1135,7 @@ The application should follow these principles:
 * [x] Define custom table schema
 * [x] Define DCR stream
 * [x] Implement Log Analytics model
-* [ ] Implement Logs Ingestion API client
+* [x] Implement Logs Ingestion API client
 * [ ] Implement batching
 * [ ] Implement ingestion retries
 

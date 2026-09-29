@@ -95,6 +95,32 @@ var host = new HostBuilder()
             })
             .Validate(options => options.OverlapWindow >= TimeSpan.Zero, "CollectionOverlap cannot be negative.");
         services.AddSingleton<ElevationRequestTimestampFilter>();
+
+        services.AddOptions<LogsIngestionOptions>()
+            .Configure(options =>
+            {
+                options.Endpoint = context.Configuration[LogsIngestionOptions.EndpointSetting] ?? string.Empty;
+                options.DataCollectionRuleImmutableId =
+                    context.Configuration[LogsIngestionOptions.RuleImmutableIdSetting] ?? string.Empty;
+                options.StreamName = context.Configuration[LogsIngestionOptions.StreamNameSetting] ?? string.Empty;
+            })
+            .Validate(
+                options => Uri.TryCreate(options.Endpoint, UriKind.Absolute, out var endpointUri)
+                    && endpointUri.Scheme == Uri.UriSchemeHttps,
+                "LogsIngestionEndpoint must be an absolute HTTPS URL.")
+            .Validate(
+                options => !string.IsNullOrWhiteSpace(options.DataCollectionRuleImmutableId),
+                "DataCollectionRuleImmutableId must be configured.")
+            .Validate(options => !string.IsNullOrWhiteSpace(options.StreamName), "DataCollectionStreamName must be configured.");
+
+        services.AddSingleton(serviceProvider =>
+        {
+            var options = serviceProvider.GetRequiredService<IOptions<LogsIngestionOptions>>().Value;
+            var credential = serviceProvider.GetRequiredService<TokenCredential>();
+            return new Azure.Monitor.Ingestion.LogsIngestionClient(new Uri(options.Endpoint), credential);
+        });
+        services.AddSingleton<ILogsIngestionTransport, AzureMonitorLogsIngestionTransport>();
+        services.AddSingleton<LogsIngestionClient>();
     })
     .Build();
 
