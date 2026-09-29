@@ -1,0 +1,16 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+TestResults/
+
+# Local configuration and secrets
+local.settings.json
+
+# IDE files
+.vs/
+*.user
+*.suo
+
+# Operating system files
+.DS_Store
+Thumbs.db

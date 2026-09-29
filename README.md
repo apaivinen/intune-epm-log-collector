@@ -63,7 +63,8 @@ The resulting data can then be queried with KQL and used by:
 │ Elevation Requests                          │
 └──────────────────────┬──────────────────────┘
                        │
-                       │ Microsoft Graph
+                * [x] Create `.gitignore`
+                * [x] Create `.gitattributes` with LF line endings
                        │
                        │ GET
                        │ /beta/deviceManagement/
@@ -1100,8 +1101,9 @@ The application should follow these principles:
 
 ## Phase 1 — Repository Foundation
 
-* [ ] Create repository directory structure
-* [ ] Create `.gitignore`
+* [x] Create repository directory structure
+* [x] Create `.gitignore`
+* [x] Create `.gitattributes`
 * [ ] Create development container
 * [ ] Create C# Function project
 * [ ] Create test project
