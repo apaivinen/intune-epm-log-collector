@@ -12,8 +12,14 @@ param logAnalyticsWorkspaceResourceGroupName string = resourceGroup().name
 @description('Subscription ID containing the existing Log Analytics workspace. Defaults to this deployment subscription.')
 param logAnalyticsWorkspaceSubscriptionId string = subscription().subscriptionId
 
-@description('Name of an existing Linux Premium or Dedicated App Service plan in this resource group.')
+@description('Name for the Linux Premium or Dedicated App Service plan.')
 param appServicePlanName string
+
+@description('App Service plan SKU name, e.g. EP1 (Elastic Premium) or P1v3 (Dedicated).')
+param appServicePlanSkuName string = 'EP1'
+
+@description('App Service plan SKU tier matching appServicePlanSkuName, e.g. ElasticPremium or PremiumV3.')
+param appServicePlanSkuTier string = 'ElasticPremium'
 
 @description('Globally unique name for the Function App.')
 param functionAppName string
@@ -90,6 +96,16 @@ module storageModule 'modules/storage-account.bicep' = {
   }
 }
 
+module appServicePlanModule 'modules/app-service-plan.bicep' = {
+  params: {
+    appServicePlanName: appServicePlanName
+    location: location
+    skuName: appServicePlanSkuName
+    skuTier: appServicePlanSkuTier
+    tags: tags
+  }
+}
+
 module applicationInsightsModule 'modules/application-insights.bicep' = {
   params: {
     componentName: applicationInsightsName
@@ -129,6 +145,7 @@ module functionAppModule 'modules/function-app.bicep' = {
   dependsOn: [
     storageModule
     applicationInsightsModule
+    appServicePlanModule
   ]
 }
 

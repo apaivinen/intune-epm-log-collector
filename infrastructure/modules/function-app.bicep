@@ -6,7 +6,7 @@ param functionAppName string
 @description('Azure region for the Function App.')
 param location string
 
-@description('Name of an existing Linux Premium or Dedicated App Service plan in this resource group. Linux Consumption does not support .NET 10 Functions.')
+@description('Name of the Linux Premium or Dedicated App Service plan in this resource group. Linux Consumption does not support .NET 10 Functions.')
 param appServicePlanName string
 
 @description('Name of an existing storage account in this resource group used by the Functions host and checkpoint service.')
