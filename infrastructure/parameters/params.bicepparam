@@ -2,8 +2,8 @@ using '../main.bicep'
 
 // Replace the example resource names and IDs before deployment.
 param location = 'westeurope'
-param logAnalyticsWorkspaceName = 'law-epm-example'
-param logAnalyticsWorkspaceResourceGroupName = 'rg-epm-example-sec-mon'
+param logAnalyticsWorkspaceName = 'd-DemoMate-sec-mon-ws'
+param logAnalyticsWorkspaceResourceGroupName = 'd-DemoMate-sec-mon'
 param appServicePlanName = 'asp-epm-linux-example'
 param functionAppName = 'func-epm-example-001'
 param storageAccountName = 'stepmexample00001'

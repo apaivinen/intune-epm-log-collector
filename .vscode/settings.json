@@ -9,6 +9,7 @@
         "command": true,
         "true": true,
         "printf": true,
-        "func": true
+        "func": true,
+        "az": true
     }
 }

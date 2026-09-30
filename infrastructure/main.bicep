@@ -3,8 +3,14 @@ targetScope = 'resourceGroup'
 @description('Azure region for resources created by this deployment. It must match the existing Log Analytics workspace region.')
 param location string
 
-@description('Name of the existing Log Analytics workspace in this resource group.')
+@description('Name of the existing Log Analytics workspace.')
 param logAnalyticsWorkspaceName string
+
+@description('Name of the resource group containing the existing Log Analytics workspace. Defaults to this deployment resource group.')
+param logAnalyticsWorkspaceResourceGroupName string = resourceGroup().name
+
+@description('Subscription ID containing the existing Log Analytics workspace. Defaults to this deployment subscription.')
+param logAnalyticsWorkspaceSubscriptionId string = subscription().subscriptionId
 
 @description('Name of an existing Linux Premium or Dedicated App Service plan in this resource group.')
 param appServicePlanName string
@@ -59,6 +65,7 @@ param tags object = {}
 
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
   name: logAnalyticsWorkspaceName
+  scope: resourceGroup(logAnalyticsWorkspaceSubscriptionId, logAnalyticsWorkspaceResourceGroupName)
 }
 
 var functionRuntimeSettings = {
@@ -87,12 +94,13 @@ module applicationInsightsModule 'modules/application-insights.bicep' = {
   params: {
     componentName: applicationInsightsName
     location: location
-    workspaceName: logAnalyticsWorkspaceName
+    workspaceResourceId: logAnalyticsWorkspace.id
     tags: tags
   }
 }
 
 module logAnalyticsTableModule 'modules/log-analytics-table.bicep' = {
+  scope: resourceGroup(logAnalyticsWorkspaceSubscriptionId, logAnalyticsWorkspaceResourceGroupName)
   params: {
     workspaceName: logAnalyticsWorkspaceName
   }
