@@ -247,11 +247,17 @@ AZURE_CLIENT_ID
 AZURE_TENANT_ID
 AZURE_SUBSCRIPTION_ID
 AZURE_RESOURCE_GROUP
+AZURE_LAW_NAME
+AZURE_LAW_RESOURCE_GROUP
 AZURE_FUNCTION_APP_NAME
 AZURE_LOCATION
 ```
 
 `AZURE_CLIENT_ID` is not considered secret and is stored as a GitHub repository variable.
+
+`AZURE_RESOURCE_GROUP` is the resource group that receives the Function App, storage account, App Service plan, Application Insights component and Data Collection Rule.
+
+`AZURE_LAW_NAME` and `AZURE_LAW_RESOURCE_GROUP` identify the **existing** Log Analytics workspace (it may live in a different resource group, subscription, or be a team-managed workspace such as a Sentinel workspace). Both are read by `infrastructure/parameters/params.bicepparam` through `readEnvironmentVariable()` and passed to the `logAnalyticsWorkspaceName` and `logAnalyticsWorkspaceResourceGroupName` Bicep parameters, so the workspace identity does not need to be hard-coded in source control.
 
 ### Repository Secrets
 
@@ -262,6 +268,21 @@ AZURE_CLIENT_SECRET
 The client secret must only be stored as a GitHub repository secret.
 
 It must never be committed into the repository.
+
+### Deployment Service Principal Azure RBAC
+
+Because the Log Analytics workspace can live in a separate resource group from the Function App resources, the deployment service principal (`AZURE_CLIENT_ID`) needs Azure RBAC roles assigned in **both** resource groups:
+
+```text
+AZURE_RESOURCE_GROUP (Function App resources)
+├── Contributor              Create/update Function App, storage, plan, App Insights, DCR
+└── User Access Administrator  Create the DCR role assignment for the Function's managed identity
+
+AZURE_LAW_RESOURCE_GROUP (Log Analytics workspace)
+└── Contributor              Create the custom table on the existing workspace
+```
+
+`User Access Administrator` is only required in `AZURE_RESOURCE_GROUP` because the `role-assignments` module grants the Function App's managed identity the `Monitoring Metrics Publisher` role on the Data Collection Rule, which is deployed alongside the Function App. It is not required in `AZURE_LAW_RESOURCE_GROUP`.
 
 ---
 
@@ -939,6 +960,8 @@ AZURE_CLIENT_ID
 AZURE_TENANT_ID
 AZURE_SUBSCRIPTION_ID
 AZURE_RESOURCE_GROUP
+AZURE_LAW_NAME
+AZURE_LAW_RESOURCE_GROUP
 AZURE_LOCATION
 AZURE_FUNCTION_APP_NAME
 ```

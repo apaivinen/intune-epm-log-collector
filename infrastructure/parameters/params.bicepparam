@@ -2,8 +2,10 @@ using '../main.bicep'
 
 // Replace the example resource names and IDs before deployment.
 param location = 'westeurope'
-param logAnalyticsWorkspaceName = 'd-DemoMate-sec-mon-ws'
-param logAnalyticsWorkspaceResourceGroupName = 'd-DemoMate-sec-mon'
+// Set via the AZURE_LAW_NAME repository variable in CI; falls back to this default locally.
+param logAnalyticsWorkspaceName = readEnvironmentVariable('AZURE_LAW_NAME', 'd-DemoMate-sec-mon-ws')
+// Set via the AZURE_LAW_RESOURCE_GROUP repository variable in CI; falls back to this default locally.
+param logAnalyticsWorkspaceResourceGroupName = readEnvironmentVariable('AZURE_LAW_RESOURCE_GROUP', 'd-DemoMate-sec-mon')
 param appServicePlanName = 'asp-epm-log-collector'
 param appServicePlanSkuName = 'EP1'
 param appServicePlanSkuTier = 'ElasticPremium'

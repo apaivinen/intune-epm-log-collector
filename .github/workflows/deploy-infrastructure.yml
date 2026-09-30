@@ -15,6 +15,8 @@ permissions:
 env:
   AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
   AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+  AZURE_LAW_NAME: ${{ vars.AZURE_LAW_NAME }}
+  AZURE_LAW_RESOURCE_GROUP: ${{ vars.AZURE_LAW_RESOURCE_GROUP }}
 
 jobs:
   infrastructure:
@@ -37,6 +39,8 @@ jobs:
           AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
           AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
           AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+          AZURE_LAW_NAME: ${{ vars.AZURE_LAW_NAME }}
+          AZURE_LAW_RESOURCE_GROUP: ${{ vars.AZURE_LAW_RESOURCE_GROUP }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
         run: |
           set -euo pipefail
@@ -46,6 +50,8 @@ jobs:
             AZURE_SUBSCRIPTION_ID
             AZURE_RESOURCE_GROUP
             AZURE_LOCATION
+            AZURE_LAW_NAME
+            AZURE_LAW_RESOURCE_GROUP
             AZURE_CLIENT_SECRET
           )
           for variable in "${required[@]}"; do
@@ -64,6 +70,9 @@ jobs:
       - name: Compile deployment parameters
         id: parameters
         shell: bash
+        env:
+          AZURE_LAW_NAME: ${{ vars.AZURE_LAW_NAME }}
+          AZURE_LAW_RESOURCE_GROUP: ${{ vars.AZURE_LAW_RESOURCE_GROUP }}
         run: |
           set -euo pipefail
           parameters_file="${RUNNER_TEMP}/epm-infrastructure-parameters.json"
