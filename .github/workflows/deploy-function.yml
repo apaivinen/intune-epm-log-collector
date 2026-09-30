@@ -55,10 +55,14 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: |
+          dotnet restore src/EpmLogCollector/EpmLogCollector.csproj
+          dotnet restore tests/EpmLogCollector.Tests/EpmLogCollector.Tests.csproj
 
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: |
+          dotnet build src/EpmLogCollector/EpmLogCollector.csproj --configuration Release --no-restore
+          dotnet build tests/EpmLogCollector.Tests/EpmLogCollector.Tests.csproj --configuration Release --no-restore
 
       - name: Run tests
         run: dotnet test tests/EpmLogCollector.Tests/EpmLogCollector.Tests.csproj --configuration Release --no-build --no-restore
