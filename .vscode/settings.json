@@ -10,6 +10,7 @@
         "true": true,
         "printf": true,
         "func": true,
-        "az": true
+        "az": true,
+        "dotnet list": true
     }
 }

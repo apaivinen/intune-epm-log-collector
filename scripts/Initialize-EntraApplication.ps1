@@ -92,7 +92,19 @@ function Invoke-GraphRequest {
     }
     catch {
         $statusCode = $_.Exception.Response.StatusCode.value__
-        throw "Microsoft Graph request failed (HTTP $statusCode): $($_.Exception.Message)"
+        # Invoke-RestMethod hides the Graph error body by default; surface it for diagnosis.
+        $graphErrorBody = $_.ErrorDetails.Message
+        if ([string]::IsNullOrWhiteSpace($graphErrorBody) -and $_.Exception.Response) {
+            try {
+                $stream = $_.Exception.Response.GetResponseStream()
+                $stream.Position = 0
+                $graphErrorBody = [System.IO.StreamReader]::new($stream).ReadToEnd()
+            }
+            catch {
+                $graphErrorBody = $null
+            }
+        }
+        throw "Microsoft Graph request failed (HTTP $statusCode) for $Method $Uri`: $($_.Exception.Message)$(if ($graphErrorBody) { [Environment]::NewLine + $graphErrorBody })"
     }
 }
 
@@ -136,7 +148,7 @@ if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($script:GraphAccessToke
     throw 'Unable to obtain a Microsoft Graph access token from the current Azure CLI session.'
 }
 
-$runtimeServicePrincipalUri = "$graphBaseUrl/servicePrincipals/$ServicePrincipalObjectId?`$select=id,appId,displayName"
+$runtimeServicePrincipalUri = "$graphBaseUrl/servicePrincipals/${ServicePrincipalObjectId}?`$select=id,appId,displayName"
 $runtimeServicePrincipal = Invoke-GraphRequest -Method GET -Uri $runtimeServicePrincipalUri
 if ($runtimeServicePrincipal.id -ne $ServicePrincipalObjectId.Guid) {
     throw "The service principal response did not match object ID $ServicePrincipalObjectId."
