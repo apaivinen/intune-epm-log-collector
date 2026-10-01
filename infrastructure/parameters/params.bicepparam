@@ -9,9 +9,9 @@ param logAnalyticsWorkspaceResourceGroupName = readEnvironmentVariable('AZURE_LA
 param appServicePlanName = 'asp-epm-log-collector'
 param appServicePlanSkuName = 'EP1'
 param appServicePlanSkuTier = 'ElasticPremium'
-param functionAppName = 'func-epm-example-001'
-param storageAccountName = 'stepmexample00001'
-param applicationInsightsName = 'appi-epm-example'
+param functionAppName = 'func-epm-coll-001'
+param storageAccountName = 'stepmlogcol0001'
+param applicationInsightsName = 'appins-epm-log-coll-001'
 param dataCollectionRuleName = 'dcr-epm-log-collector'
 
 param epmCollectionSchedule = '0 */5 * * * *'
