@@ -1224,7 +1224,7 @@ The application should follow these principles:
 
 ## Phase 8 — Production Validation
 
-* [ ] Deploy infrastructure
+* [x] Deploy infrastructure
 * [ ] Deploy Function
 * [ ] Generate EPM request
 * [ ] Verify Graph collection
@@ -1232,6 +1232,10 @@ The application should follow these principles:
 * [ ] Verify duplicate prevention
 * [ ] Verify failure recovery
 * [ ] Validate KQL queries
+
+## TODO:
+
+* [ ] Remove github repository variable parameter `AZURE_FUNCTION_APP_NAME` and modify deployments to use params.bicepparam value `functionAppName`
 
 ---
 
