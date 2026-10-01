@@ -66,9 +66,6 @@ The resulting data can then be queried with KQL and used by:
 │ Elevation Requests                          │
 └──────────────────────┬──────────────────────┘
                        │
-                * [x] Create `.gitignore`
-                * [x] Create `.gitattributes` with LF line endings
-                       │
                        │ GET
                        │ /beta/deviceManagement/
                        │ elevationRequests
